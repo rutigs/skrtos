@@ -1,0 +1,44 @@
+This ASCII file is to contain a description of any known problems or issues with your 
+assignment. If you know something doesn't work or you assignment is incomplete document
+it here so that the markers don't waste time trying to figure out if there is 
+some sort of build problem or issue when it is simply the case that things aren't
+working.
+
+When all user processed are stopped, and there are no processed on the ready queue, 
+kernel behavior is unspecified.
+
+Also, it should be noted that we have unit tests that run every time the kernel runs,
+and these tests do test some error cases that will print out error messages to the console.
+It's normal.
+
+
+------------------------------------------------------------------------------------
+Describe in two or three paragraphs, the overall testing methodologies that you used for
+ the completed kernel and why you are confident your kernel works.
+
+
+Testing of the kernel broke down into 2 methodologies: 
+
+  Written unittests, ran everytime the kernel runs
+  and Manual testing via adding print statments and visually verifying they are printed.
+
+
+Unit tests cover memory management (kmalloc and kfree with various orders and cases),
+ready queue management (ready and next, with various setup and ordering), process creation
+(create with various valid and invalid arguments), and process destruction(PCB and memory freed).
+
+These unit tests are triggered by the run_tests() routine in test.c and is called at the 
+of initproc() in init.c. This way, everytime the kernel is ran, these functionalities are
+tested.
+
+
+For dispatch(), context switcher and system calls, they can only be tested by testing the 
+funtionality of the kernel as a whole, instead of unit tests. So we use manual testing, such
+as the Producer/Consumer in user.c, as well as an enhanced version of that described in 
+Testing.txt, Test Case 3, Manual Testing. With these, we place print statemens and manually
+verify they are printed. There is also a kernel test that can be trigger by run_kernel_test()
+in init_proc(). It tests the kernel by creating new processes until the process limit is reached.
+
+Because when we last edited the code, we performed both of these kinds of tests and they both
+passed, we are confident that our kernel works.
+

@@ -1,0 +1,232 @@
+
+This file is to include your testing documentation. The file is to be
+in plain text ASCII and properly spaced and edited so that when it is
+viewed on a Linux machine it is readable. Not all ASCII files created
+on a Windows machine display as expected due to the differences with
+respect to how new lines and carriage returns are treated. Line widths
+are to be limited to 80 characters.
+
+---------------------------------------------------------------------
+Our coded testing is started by the run_test method inside of test.c
+
+This is where we call the major coded tests for the dispatcher, memory 
+manager and process creation. Comment/Uncomment specific sections in test.c 
+to test individual components at a time.
+
+4 major test cases:
+-------------------
+1. Is memory from kmalloc correctly aligned and is the free list
+updated accordingly?
+2. Is memory freed correctly and is the free list updated accordingly?
+3. Are process interrupts correctly arriving in the context switcher
+and they're values and state correctly saved and returned to?
+4. Are processes correctly dispatched to their syscalls, the ready
+queue updated accordingly, and state correctly updated?
+
+Breakdowns
+------------------------------------------------------------------
+
+Test Case 1:
+------------
+Is memory from kmalloc correctly aligned and is the free list
+updated accordingly?
+
+Unittesting:  Called kmeminit and kmalloc with different values, and asserted the state
+of the free list and memory block is as expected.
+
+Test cases: (found at end of mem.c)
+    - test_kmeminit:
+        - memory head is 16 byte aligned
+        - memory head is not larger than holestart
+        - memory head size is not too large (in relation to HOLESTART)
+        - memory head size is not too small (in relation to HOLESTART)
+        - memory head has correct sanity check
+        - memory head free memory footer structure correct
+        - second initial memory slot is end of hole
+        - second initial memory slot is 16 byte aligned
+        - second initial memory slot has correct size
+        - second initial memory slot has correct sanity check
+        - memory head previous slot is not null
+        - second mem slot next is null
+        - second mem slot prev is pointing to memory head
+        - second mem slot free memory footer structure correct
+
+    - test_kmalloc:
+        - invalid size request for size 0
+        - invalid size request for size -1
+        - too much memory requested
+        - kmalloc with 16 byte aligned memory request passes
+        - aligned memory request sanity check is correct
+        - kmalloc with unaligned memory request passes
+        - unaligned memory request sanity check is correct
+        - kmalloc with request larger than first free block
+        - request larger than first free block sanity check
+        - kmalloc with request on memory before hole
+        - request on memory before hole sanity check
+
+
+Output:
+The following line is printed if all tests in mem.c passed.
+
+Testing: mem.c tests passed.  
+
+
+Test Case 2:
+------------
+Is memory freed correctly and is the free list updated accordingly?
+
+Unittesting: Called kmalloc and kfree and asserted the state of the free list and
+memory block is as expected by. 
+
+Test Cases: (found at end of mem.c)
+    - test_kfree:
+        - kmalloc one block, free that block, coalesce with after block
+        - kmalloc three adjacent blocks, free middle block, cannot coalesce
+        - free last block, coalesce on both sides.
+
+Output:
+The following line is printed if all tests in mem.c passed.
+
+Testing: mem.c tests passed.  
+
+
+Test Case 3:
+------------
+Are process interrupts correctly arriving in the context switcher
+and they're values and state correctly saved and returned to?
+
+Unittesting: Call create() with different arguments and check returned result 
+as well as PCB and memory resources are in expected state.
+
+Test cases: (Found at test_create_process - end of create.c)
+    - test_create:
+        - Returns 0 with null function pointer
+        - Returns 0 with invalid stack size
+        - Returns 0 when pcb table full
+        - Returns 0 when requested stack size too large
+        - Make successfull call to create() and check:
+            - pcb->state is READY
+            - pcb->pid is set correctly
+            - pcb->esp is set to the right location
+            - esp, ebp, iret_eip, iret_cs, and eflags on stack are correct
+
+Output:
+The following line is printed if all tests in create.c passed.
+
+Testing: create.c tests passed. 
+
+
+Maual Testing: Add print statements dispatch() in disp.c. (Commented out for
+regular running of kernel.) Run kernel with producer/consumer in user.c. Check 
+that messages are printed when kernel is ran.
+
+Print Statements:
+switch( request ) {
+      case( SYS_CREATE ):
+        kprintf("SYS_CREATE reached\n");
+        create(*args, *(args + 1));
+        break;
+      case( SYS_YIELD ):
+        /* kprintf("SYS_YIELD reached\n");
+        ready( process );
+        process = next();
+        break;
+      case( SYS_STOP ):
+        kprintf("SYS_STOP reached\n");
+        cleanup( process );
+        process = next();
+        break;
+    }
+
+Output:
+Entering dispatch
+Hello World!   
+SYS_CREATE reached
+SYS_CREATE reached
+SYS_YIELD reached
+
+ Happy 101stSYS_YIELD reached      
+ Birthday UBCSYS_YIELD reached
+SYS_YIELD reached
+
+.
+. the 3 lines repeated 12 times
+. 
+
+SYS_STOP reached
+Birthday UBCSYS_YIELD reached
+SYS_YIELD reached
+Birthday UBCSYS_YIELD reached
+SYS_YIELD reached
+Birthday UBCSYS_YIELD reached
+SYS_YIELD reached
+SYS_STOP reached
+SYS_YIELD reached
+SYS_YIELD reached
+SYS_YIELD reached
+SYS_YIELD reached
+.
+.
+. "SYS_YIELD reached" repeating
+
+
+
+Test Case 4:
+------------
+Are processes correctly dispatched to their syscalls, the ready
+queue updated accordingly, and state correctly updated?
+
+Unittesting:
+Called ready(), next() and cleanup() and verified the PCB and ready 
+queue is as expected.
+
+Test cases: (Found at test_dispatcher - end of disp.c)
+    - test_dispatchinit:
+        - ready pcb queue initialized to null
+        - ready pcb queue tail initialized to null
+        - PCB states set to STOPPED
+    - test_ready:
+        - check ready queue correct with nothing on queue
+        - check ready queue correct with one ready() call
+        - check PCB on ready queue has status of READY
+        - check ready queue correct with two ready() calls
+        - check ready queue correct with multiple ready() calls
+    - test_next:
+        - returns null on empty queue
+        - call next() on one element ready queue, check ready queue empty after
+        - call next() on 3 element ready queue, check ready queue structure
+    - test_cleanup:
+        - call cleanup() on a process, check for:
+            - pid is reset
+            - memory is freed
+            - state set to STOPPED
+            - next pcb set to NULL
+            - stack pointer reset
+
+Output:
+The following line is printed if all tests in disp.c passed.
+
+Testing: disp.c tests passed. 
+
+
+
+Kernel Testing:
+Wrote a kernel test (triggered via run_kernel_test() in init_proc())that spins up a 
+master process that keeps spinning up child processes until the process limit 
+(size of PCB is reached).
+
+The number of child processes is verified and a message is printed if that assertion
+fails.
+
+Each child process calls sysyield and a global counter is used to keep track of the
+number of times the process returns from sysyield. The counter is then checked for 
+the correct value.
+
+Output:
+The following line is printed if the kernel test passed.
+
+Testing: Kernel Test passed.
+
+
+
+    

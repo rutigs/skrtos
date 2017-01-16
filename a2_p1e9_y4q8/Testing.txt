@@ -1,0 +1,188 @@
+
+This file is to include your testing documentation. The file is to be
+in plain text ASCII and properly spaced and edited so that when it is
+viewed on a Linux machine it is readable. Not all ASCII files created
+on a Windows machine display as expected due to the differences with
+respect to how new lines and carriage returns are treated. Line widths
+are to be limited to 80 characters.
+
+-------------------------------------------------------------------------------
+
+Our coded testing is started by various processes inside of user.c that can be
+created inside of init.c in place of the root process (eg. test_sysputs,
+test_sysgetpid_and_return). These processes model all the paths of the code we
+have added and their corresponding results - both expected and actual.
+There is more tests present in user.c than that is listed below.
+
+Comment/Uncomment individual test cases to see their results.
+
+NOTE: We use the phrase "child process" to indicate another process we might be
+using to test some functionality. This does not mean there is any inherent
+relationship between the processes -- only that they are both apart of the test
+
+===============================================================================
+1. Two tests associated with sends.
+===============================================================================
+  i. Send, recv is valid and not blocked yet
+     -> user.c test_syssend() Test #1
+     -> Purpose: test when process tries to send to a process that is running
+        (on the ready queue)
+        To perform this test we do:
+          - create child process and keep its pid
+          - call send to this child process with some number
+          - child process tries to receive from sender process, completes
+
+     Output: "test_syssend - Send Test 1: expected = 0, result = 0"
+
+ ii. Send, recv is valid, already blocked
+     -> user.c test_syssend() Test #2
+     -> Purpose: test when process tries to send to a process that is on the
+        blocked queue, waiting to receive
+        To perform this test we do:
+          - create child process and keep its pid
+          - yield so the child process can run
+          - the child process will call receive and will block
+          - call send to this child process
+
+     Output: "test_syssend - Send Test 2: expected = 0, result = 0"
+
+Additional:
+
+These are modelled inside of the producer/consumer inherently but also tested
+in our coded tests in user.c
+
+iii. Send to non valid processes
+     -> user.c test_syssend() Test #3
+
+ iv. Send, receiver is originally a valid process but it terminates
+     -> user.c test_syssend() Test #5
+
+===============================================================================
+2. Two tests associated with receive.
+===============================================================================
+Some of these tests can viewed as the same as send tests, however we are not
+actively checking the return codes on both sides to determine that is case
+
+ i. Receive, send is not blocked waiting, send is valid
+    -> user.c test_sysrecv() Test #1
+    -> a process calls receive to a running process (on the ready queue)
+       To perform this test we do:
+         - create a child process
+         - call receive on the process and block
+         - child process will get scheduled and call send to the main process
+         - main process finishes recv
+
+    Output: "test_sysrecv - Recv Test 1: expected = 0, result = 0"
+
+ii. Receive, send is valid, already blocked (waiting)
+    -> user.c test_sysrecv() Test #2
+    -> a process calls receive on a process that is blocked sending to it
+       To perform this test we do:
+         - create a child process
+         - yield so the child process can run
+         - child process will call send and will block
+         - call recv to this child process 
+
+    Output: "test_sysrec - Recv Test 2: expected = 0, result = 0"
+
+Additional:
+Most of these are modelled inside of the producer/consumer inherently but also
+tested in our coded tests in user.c
+
+iii. Receive from non valid processes
+     -> user.c test_sysrecv() Test #3
+
+ iv. Receive from any, send is blocked waiting
+     -> user.c test_sysrecv() Test #5
+
+  v. Receive from a process that terminates
+     -> user.c test_sysrecv() Test #6
+
+ vi. Receive with invalid from_pid
+     -> user.c test_sysrecv() Test #8
+
+vii. Receive with invalid mem_locn
+     -> user.c test_sysrecv() Test #9
+
+===============================================================================
+3. One test of a send failure not demonstrated in the producer consumer problem
+===============================================================================
+  i. Send to itself
+     -> user.c test_syssend() Test #4
+     -> if a process tries to send to itself it should fail with return code -2
+        The way this test can be performed is by doing the following:
+          - get the current process' pid
+          - call send on current process pid
+
+      Output: "test_syssend - Send Test 4: expected = -2, result = -2"
+
+Additional:
+
+This one is straightforward.
+
+ ii. Call send with NULL as dest_pid -> test_syssend() Test #6.
+
+===============================================================================
+4. Two tests of receive failure not demonstrated
+===============================================================================
+  i. Receive from itself
+     -> user.c test_sysrecv() Test #4
+     -> if a process tries to receive from itself it should fail with return
+        code -2.
+        The way this test can be performed is by doing the following:
+        - get the current process' pid
+        - call the receive from this pid
+        - the process should now get result -2
+
+      Output: "test_sysrecv - Recv Test 4: expected = -2, result = -2"
+
+ ii. Receive from any process, other process(es) terminate, receive now fails
+     -> user.c test_sysrecv() Test #7
+     -> initially the receive on any is valid, so it blocks, but when the other process is
+        is scheduled it terminates and the receive is now invalid.
+        The way this can be tested is the following:
+        - create a child process that will terminate when scheduled
+        - call the receive any from the 1st process; this will block
+        - the child process will run and terminate
+        - the 1st process should now get result -1 
+
+      Output: "test_sysrecv - Recv Test 7: expected = -1, result = -1"
+
+Additional:
+
+These 2 are not covered as well but are pretty straightforward.
+
+iii. Receive with NULL as from_pid
+     -> test_sysrecv() Test #8.
+
+ iv. Receive with NULL as mem_locn
+     -> test_sysrecv() Test #9.
+
+===============================================================================
+5. One test demonstrating that time-sharing is working
+===============================================================================
+  i. Two processes sleep, helper wakes first. Test the correctness of syssleep 
+     duration.
+     -> user.c test_syssleep() Test #2
+     -> This can be by doing the following
+        - create child process from current process
+        - yield to child process
+        - child process will sleep for a short period of time
+        - control returns to main process. main process will sleep for a longer period of time
+        - observe the child process print its "woke up" message first
+
+     Output: "test_syssleep_helper Woke from sleep. expected = 0, result = 0"
+             "test_syssleep Woke from sleep. expected = 0, result = 0"
+
+Additional:
+Because we wrote them.
+
+ ii. Test for delay between printing statements after sleeping
+     -> user.c test_syssleep() Test #1
+
+iii. Test when first sleeping process sleeps for shorter duration than next process
+     that calls syssleep.
+     -> user.c test_syssleep() Test #3
+
+ iv. Kill process in sleep
+     -> user.c test_syssleep() Test #4

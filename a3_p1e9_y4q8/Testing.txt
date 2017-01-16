@@ -1,0 +1,127 @@
+
+This file is to include your testing documentation. The file is to be
+in plain text ASCII and properly spaced and edited so that when it is
+viewed on a Linux machine it is readable. Not all ASCII files created
+on a Windows machine display as expected due to the differences with
+respect to how new lines and carriage returns are treated. Line widths
+are to be limited to 80 characters.
+
+Test Cases
+-------------------------------------------------------------------------------
+
+All of our code test code can be found in our user.c including many cases not
+discussed here.
+
+===============================================================================
+1. Test showing priorization of signals
+===============================================================================
+Inside of the function  test_signal_priority( void ) inside of user.c we
+have several tests that are testing signal priority.
+
+One example of this is Test Case 3.
+- create process with pid that registers handlers for several signals
+- We signal this process with two different signals and yield the CPU to allow
+  the process to be scheduled
+- The process then runs the handler for the higher priority signal and then the
+  kernel will then be scheduled next
+- We verify that the higher priority signal handler ran by having the handlers
+  do different things to counters and verify the desired outcome from the higher
+  priority handler
+
+===============================================================================
+2. syssighandler() test case
+===============================================================================
+We test this inside of the function test_syssighandler( void ) inside of user.c
+
+An example test of this is Test Case 3:
+- a sig_handler that run sys_stop() is created
+- the sig_handler is registered using syssighandler
+- the return code is correct
+
+Test Case 4 then registers a different handler, verifies the return code and
+verifies that the old_handler is equal to the old sig_handler from case 3.
+
+===============================================================================
+3. syskill() test case
+===============================================================================
+syskill() is tested inside of test_syskill( void ) in user.c
+
+An example test of this is Test Case 4:
+- a signal handler is registered that increments a global counter that is
+  initially 0
+- we signal the process with that signal number and verify the return code is
+  success
+- we then verify that the correct signal handler was run by checking the global
+  counter has been incremented.
+
+===============================================================================
+4. syssigwait() test case
+===============================================================================
+syswait is tested inside of test_syswait() in user.c
+
+An example test of this is Test Case 2:
+- a helper process is created and its pid is saved
+- the test yields the CPU to allow the helper to register a sighandler
+- the test process then sends a syskill to that process on the same signal
+- the test process then calls syswait on the helper process
+- the return code is then verified to be correct
+
+===============================================================================
+5. sysopen() with invalid arguments
+===============================================================================
+sysopen (and sysclose) is tested inside of test_sysopen_sysclose() in user.c
+
+A test of invalid arguments is Test Case 1:
+- a sysopen is called with 5
+- the return code is verified to be -1, not a file descriptor
+
+Test Case 3 calls sysopen on a device that is already open to verify a device
+can't be open to multiple processes
+
+===============================================================================
+6. syswrite() with invalid file descriptor
+===============================================================================
+syswrite is tested inside of test_syswrite() in user.c
+
+A test with an invalid file descriptor is Test Case 1:
+- After opening the keyboard with a given fd we attempt a sysread on a
+  different file descriptor 5 and verify the return code is -1
+
+Another test is Test Case 2:
+- We attempt a sysread on an open devices' fd+1 and verify the return code is
+  again -1
+
+===============================================================================
+7. sysioctl() test for invalid commands
+===============================================================================
+sysioctl is tested inside of test_sysioctl() in user.c
+
+A test with invalid commands is Test Case 1:
+- we open a device and receive a file descriptor.
+- we then call command 11 on that file descriptor and verify the return code is
+  correctly -1 as this is not a valid command
+
+===============================================================================
+8. sysread() when there are more characters buffered in kernel than the request
+===============================================================================
+This case of sysread is also tested inside of sysread()
+
+A test for this scenario is Test Case
+
+===============================================================================
+9. Two test cases for scenarios not covered here or in the test program
+===============================================================================
+
+1. test_syskill() - Test Case 5 - no handler for signal number
+- we signal a process with a signal number it has not registered a handler for
+- we verify the return code is 0 and that the a global counter has not been
+  incremented.
+
+2. test_syskill() - Test Case 6 - signal a sleeping process
+- a helper process is created
+- we yield a CPU so it can register handlers
+- we call syskill on the helper process
+- the test process then calls syssleep
+- the helper process when running its signal handler for that signal earlier
+  has handler that signals the test process
+- the test process will then wake up with amount left to sleep

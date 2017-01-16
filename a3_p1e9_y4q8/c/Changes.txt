@@ -1,0 +1,38 @@
+
+create.c 
+   - Some comments added and some spacing changes
+   - Added code so that when a process runs off the end of its code systop is
+   called
+
+
+disp.c
+   - Added dispatching for syskill and sysgetcputmes
+   - Added some comments
+   - added kernel function removeFromReady
+   - added kernel function kill
+   - added kernel function getCPUtimes
+
+
+sleep.c
+   - added kernel function removeFromSleep
+   - removed #define MILLISECONDS_TICK as it is moved to xeroskernel.h 
+   - changed spacing of extern void tick()
+
+
+syscall.c
+   - added the system calls syskill and sysgetcputimes
+
+user.c
+   - test scenarios added to test syskill and its abiltity to remove process
+   off both the sleep and readyQs
+   - demonstration of how to use sysgetCPUtimes
+
+xeroskernel.h
+   - added #define of MILLISECONDS_TICK
+   - added new state a process can be in STATE_RUNNING
+   - added system call numbers for syskill and sysgetcputimes
+   - added the typedef processStatuses which identifies the structure that the
+   system call sysgetcputimes uses
+   - added prototypes for the kernel functions removeFromSleep and getCPUtimes
+   - added prototypes for the system calls syskill() and sysgetcputimes()
+
